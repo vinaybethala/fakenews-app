@@ -35,7 +35,7 @@ def clean_text(text: str) -> str:
     text = text.strip()
 
     return text
-sample = "Helllo  word"
+sample = "   Helllo  word  "
 # sample = "BREAKING NEWS!!! Visit https://news.com NOW 😡😡More updates soon."
 
 print(clean_text(sample))
