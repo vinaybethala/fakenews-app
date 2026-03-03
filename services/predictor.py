@@ -1,15 +1,32 @@
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
 from typing import Dict
+
+# try to import heavy dependencies; if they're missing we fall back
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+except ImportError:
+    torch = None  # type: ignore
+    AutoTokenizer = None  # type: ignore
+    AutoModelForSequenceClassification = None  # type: ignore
 
 
 # Load model & tokenizer once (IMPORTANT)
 MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english"
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
+# initialize to None and then attempt to load
+tokenizer = None
+model = None
 
-model.eval()  # Set model to evaluation mode
+if torch is not None and AutoTokenizer is not None and AutoModelForSequenceClassification is not None:
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
+        model.eval()  # Set to evaluation mode
+    except Exception:
+        # loading failure, leave model/tokenizer as None
+        tokenizer = None
+        model = None
 
 
 def predict_news(text: str) -> Dict[str, float]:
@@ -24,6 +41,13 @@ def predict_news(text: str) -> Dict[str, float]:
     """
 
     if not text or not text.strip():
+        return {
+            "label": "UNKNOWN",
+            "confidence": 0.0
+        }
+
+    # if the heavy dependencies failed to import or model didn't load, return safe default
+    if torch is None or tokenizer is None or model is None:
         return {
             "label": "UNKNOWN",
             "confidence": 0.0
