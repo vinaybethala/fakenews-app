@@ -1,10 +1,15 @@
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-# load environment before importing any service modules that might use it
-load_dotenv()
+# ensure .env variables are available before any service modules are imported
+# use find_dotenv to locate file even if cwd changes
+load_dotenv(find_dotenv())
 
-from flask import Flask, render_template, request, jsonify
 import os
+from flask import Flask, render_template, request, jsonify
+
+# debug log on startup to check API key presence
+_api_key = os.getenv("GOOGLE_FACTCHECK_API_KEY")
+print("FactCheck API key loaded:", "YES" if _api_key else "NO")
 
 from services.preprocess import clean_text
 from services.predictor import predict_news

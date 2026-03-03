@@ -9,28 +9,35 @@
 <body>
 
 <div class="container">
-    <h1>Fake News Intelligence</h1>
+    <header>
+        <h1>Fake News Intelligence</h1>
+    </header>
 
-    <textarea id="newsInput" placeholder="Paste a news article or claim here..."></textarea>
+    <main>
+        <section class="input-section">
+            <textarea id="newsInput" placeholder="Paste a news article or claim here..."></textarea>
+            <button id="analyzeBtn">Analyze</button>
+        </section>
 
-    <button id="analyzeBtn">Analyze</button>
+        <div id="overlay" class="overlay hidden">
+            <div class="loading">
+                <div class="spinner"></div>
+                <span>Analyzing...</span>
+            </div>
+        </div>
 
-    <div id="loading" class="loading hidden">
-        <div class="spinner"></div>
-        <span>Analyzing...</span>
-    </div>
-
-    <div id="result"></div>
+        <section id="result" class="results"></section>
+    </main>
 </div>
 
 <script>
 const analyzeBtn = document.getElementById("analyzeBtn");
 
-aalyzeBtn.addEventListener('click', analyzeText);
+analyzeBtn.addEventListener('click', analyzeText);
 
 async function analyzeText() {
     const text = document.getElementById("newsInput").value;
-    const loading = document.getElementById("loading");
+    const overlay = document.getElementById("overlay");
     const resultDiv = document.getElementById("result");
 
     if (!text.trim()) {
@@ -39,7 +46,7 @@ async function analyzeText() {
     }
 
     analyzeBtn.disabled = true;
-    loading.classList.remove("hidden");
+    overlay.classList.remove("hidden");
     resultDiv.innerHTML = "";
 
     try {
@@ -49,8 +56,12 @@ async function analyzeText() {
             body: JSON.stringify({ text })
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
-        loading.classList.add("hidden");
+        overlay.classList.add("hidden");
         analyzeBtn.disabled = false;
 
         if (data.error) {
@@ -59,19 +70,20 @@ async function analyzeText() {
         }
 
         resultDiv.innerHTML = `
-            <div class="card">
-                <h2>Prediction: ${data.prediction.label}</h2>
-                <p>Confidence: ${data.prediction.confidence}%</p>
+            <div class="card prediction-card">
+                <h2>Prediction</h2>
+                <p class="label">${data.prediction.label}</p>
+                <p class="confidence">Confidence: ${data.prediction.confidence}%</p>
             </div>
 
-            <div class="card">
+            <div class="card claims-card">
                 <h3>Extracted Claims</h3>
                 <ul>
                     ${data.claims.length ? data.claims.map(c => `<li>${c}</li>`).join("") : '<li><em>No claims found.</em></li>'}
                 </ul>
             </div>
 
-            <div class="card">
+            <div class="card factcard">
                 <h3>Fact Check Results</h3>
                 <ul>
                     ${data.fact_checks.length ? data.fact_checks.map(f => `
@@ -86,7 +98,7 @@ async function analyzeText() {
             </div>
         `;
     } catch (err) {
-        loading.classList.add("hidden");
+        overlay.classList.add("hidden");
         analyzeBtn.disabled = false;
         resultDiv.innerHTML = `<p class="error">Network error: ${err.message}</p>`;
     }

@@ -10,6 +10,7 @@ body {
 }
 
 .container {
+    position: relative;
     max-width: 800px;
     margin: 60px auto 40px;
     background: #ffffff;
@@ -57,17 +58,36 @@ button:hover:not(:disabled) {
     background: #16305d;
 }
 
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
 .card {
     margin-top: 24px;
     padding: 20px;
     background: #f4f6f9;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
 }
 
 .card h2, .card h3 {
     margin-top: 0;
     color: #1e3c72;
+    font-weight: 600;
 }
 
 .card ul {
@@ -75,7 +95,15 @@ button:hover:not(:disabled) {
 }
 
 .card li {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.results a {
+    color: #1e3c72;
+    text-decoration: none;
+}
+.results a:hover {
+    text-decoration: underline;
 }
 
 .loading {
@@ -106,6 +134,26 @@ button:hover:not(:disabled) {
 .error {
     color: #e74c3c;
     font-weight: 600;
+}
+
+/* Result typography tweaks */
+.results .label {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+}
+.results .confidence {
+    font-size: 0.95rem;
+    color: #555;
+}
+
+/* Input section adjustments */
+.input-section {
+    display: flex;
+    flex-direction: column;
+}
+.input-section textarea {
+    margin-bottom: 20px;
 }
 
 @media (max-width: 600px) {
