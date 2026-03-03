@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Fake News Intelligence</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Fake News Intelligence</h1>
+
+    <textarea id="newsInput" placeholder="Paste a news article or claim here..."></textarea>
+
+    <button id="analyzeBtn">Analyze</button>
+
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <span>Analyzing...</span>
+    </div>
+
+    <div id="result"></div>
+</div>
+
+<script>
+const analyzeBtn = document.getElementById("analyzeBtn");
+
+aalyzeBtn.addEventListener('click', analyzeText);
+
+async function analyzeText() {
+    const text = document.getElementById("newsInput").value;
+    const loading = document.getElementById("loading");
+    const resultDiv = document.getElementById("result");
+
+    if (!text.trim()) {
+        alert("Please enter some text to analyze.");
+        return;
+    }
+
+    analyzeBtn.disabled = true;
+    loading.classList.remove("hidden");
+    resultDiv.innerHTML = "";
+
+    try {
+        const response = await fetch("/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+        loading.classList.add("hidden");
+        analyzeBtn.disabled = false;
+
+        if (data.error) {
+            resultDiv.innerHTML = `<p class="error">${data.error}</p>`;
+            return;
+        }
+
+        resultDiv.innerHTML = `
+            <div class="card">
+                <h2>Prediction: ${data.prediction.label}</h2>
+                <p>Confidence: ${data.prediction.confidence}%</p>
+            </div>
+
+            <div class="card">
+                <h3>Extracted Claims</h3>
+                <ul>
+                    ${data.claims.length ? data.claims.map(c => `<li>${c}</li>`).join("") : '<li><em>No claims found.</em></li>'}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Fact Check Results</h3>
+                <ul>
+                    ${data.fact_checks.length ? data.fact_checks.map(f => `
+                        <li>
+                            <strong>${f.claim}</strong><br>
+                            Verdict: ${f.verdict}<br>
+                            Publisher: ${f.publisher || "N/A"}<br>
+                            ${f.url ? `<a href="${f.url}" target="_blank">Read Source</a>` : ""}
+                        </li>
+                    `).join("") : '<li><em>No fact check results.</em></li>'}
+                </ul>
+            </div>
+        `;
+    } catch (err) {
+        loading.classList.add("hidden");
+        analyzeBtn.disabled = false;
+        resultDiv.innerHTML = `<p class="error">Network error: ${err.message}</p>`;
+    }
+}
+</script>
+
+</body>
+</html>
